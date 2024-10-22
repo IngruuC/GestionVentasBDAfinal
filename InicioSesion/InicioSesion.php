@@ -41,6 +41,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Siempre redirigir al index.php, ya sea que haya un error o no
 header('Location: ../index.php');
 exit();

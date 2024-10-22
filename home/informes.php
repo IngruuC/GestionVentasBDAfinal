@@ -11,23 +11,108 @@ $connection = new Connection();
 $pdo = $connection->connect();
 
 function getInformesRecientes($pdo) {
-    // Simulación de informes recientes
-    return [
-        ['id' => 1, 'nombre' => 'Ventas Diarias - 2023-10-20', 'fecha' => '2023-10-21', 'tipo' => 'ventas'],
-        ['id' => 2, 'nombre' => 'Estado del Inventario - Octubre 2023', 'fecha' => '2023-10-15', 'tipo' => 'inventario'],
-        ['id' => 3, 'nombre' => 'Actividad de Clientes - Q3 2023', 'fecha' => '2023-10-01', 'tipo' => 'clientes'],
-    ];
+    // Primero, obtenemos la información sobre las columnas de la tabla
+    $stmt = $pdo->query("DESCRIBE informes");
+    $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    // Construimos la consulta basándonos en las columnas existentes
+    $selectColumns = [];
+    if (in_array('id', $columns)) $selectColumns[] = 'id';
+    if (in_array('nombre', $columns)) $selectColumns[] = 'nombre';
+    if (in_array('fecha', $columns)) $selectColumns[] = 'fecha';
+    if (in_array('fecha_creacion', $columns)) $selectColumns[] = 'fecha_creacion';  // Alternativa común para 'fecha'
+    if (in_array('tipo', $columns)) $selectColumns[] = 'tipo';
+
+    // Si no hay columnas válidas, lanzamos una excepción
+    if (empty($selectColumns)) {
+        throw new Exception("No se encontraron columnas válidas en la tabla informes");
+    }
+
+    $query = "SELECT " . implode(', ', $selectColumns) . " FROM informes ORDER BY ";
+    
+    // Ordenamos por fecha si existe, si no, por id
+    $query .= in_array('fecha', $columns) ? 'fecha' : (in_array('fecha_creacion', $columns) ? 'fecha_creacion' : 'id');
+    $query .= " DESC LIMIT 5";
+
+    $stmt = $pdo->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-$informesRecientes = getInformesRecientes($pdo);
+function generarInforme($pdo, $tipoInforme, $fechaInicio, $fechaFin) {
+    switch ($tipoInforme) {
+        case 'ventas_diarias':
+            $query = "SELECT fecha, SUM(monto) as total_ventas 
+                      FROM ventas 
+                      WHERE fecha BETWEEN :fechaInicio AND :fechaFin 
+                      GROUP BY fecha";
+            break;
+        case 'inventario':
+            $query = "SELECT p.nombre, i.cantidad, i.fecha_actualizacion 
+                      FROM inventario i 
+                      JOIN productos p ON i.producto_id = p.id 
+                      WHERE i.fecha_actualizacion BETWEEN :fechaInicio AND :fechaFin";
+            break;
+        case 'clientes':
+            $query = "SELECT c.nombre, COUNT(v.id) as total_compras, SUM(v.monto) as monto_total 
+                      FROM clientes c 
+                      LEFT JOIN ventas v ON c.id = v.cliente_id 
+                      WHERE v.fecha BETWEEN :fechaInicio AND :fechaFin 
+                      GROUP BY c.id";
+            break;
+        case 'productos':
+            $query = "SELECT p.nombre, SUM(v.cantidad) as unidades_vendidas, SUM(v.monto) as ingresos_totales 
+                      FROM productos p 
+                      JOIN ventas_detalle v ON p.id = v.producto_id 
+                      JOIN ventas vn ON v.venta_id = vn.id 
+                      WHERE vn.fecha BETWEEN :fechaInicio AND :fechaFin 
+                      GROUP BY p.id";
+            break;
+        default:
+            throw new Exception("Tipo de informe no válido");
+    }
+
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([':fechaInicio' => $fechaInicio, ':fechaFin' => $fechaFin]);
+    $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Generar nombre del informe
+    $nombreInforme = ucfirst(str_replace('_', ' ', $tipoInforme)) . " - " . $fechaInicio . " a " . $fechaFin;
+
+    // Guardar el informe en la base de datos
+    $queryGuardar = "INSERT INTO informes (nombre, tipo, fecha, datos) VALUES (:nombre, :tipo, NOW(), :datos)";
+    $stmtGuardar = $pdo->prepare($queryGuardar);
+    $stmtGuardar->execute([
+        ':nombre' => $nombreInforme,
+        ':tipo' => $tipoInforme,
+        ':datos' => json_encode($resultados)
+    ]);
+
+    return $nombreInforme;
+}
+
+$mensajeExito = '';
+$mensajeError = '';
+
+try {
+    $informesRecientes = getInformesRecientes($pdo);
+} catch (Exception $e) {
+    $mensajeError = "Error al obtener informes recientes: " . $e->getMessage();
+    $informesRecientes = [];
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tipoInforme = $_POST['tipo_informe'];
     $fechaInicio = $_POST['fecha_inicio'];
     $fechaFin = $_POST['fecha_fin'];
     
-    // Aquí iría la lógica para generar el informe
-    $mensajeExito = "Informe de $tipoInforme generado para el período del $fechaInicio al $fechaFin.";
+    try {
+        $nombreInforme = generarInforme($pdo, $tipoInforme, $fechaInicio, $fechaFin);
+        $mensajeExito = "Informe '$nombreInforme' generado exitosamente.";
+        $informesRecientes = getInformesRecientes($pdo); // Actualizamos la lista de informes recientes
+    } catch (Exception $e) {
+        $mensajeError = "Error al generar el informe: " . $e->getMessage();
+    }
 }
 ?>
 
@@ -64,14 +149,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="sidebar">
-    <h2>Dashboard</h2>
-    <a href="dashboard.php">Inicio</a>
-    <a href="estadisticas.php">Estadísticas</a>
-    <a href="informes.php">Informes</a>
-    <a href="inventario.php">Inventario</a>
-    <a href="configuracion.php">Configuración</a>
-    <a href="../InicioSesion/CerrarSesion.php">Cerrar sesión</a>
-    <a href="javascript:history.back()">Volver</a>
+        <h2>Dashboard</h2>
+        <a href="dashboard.php">Inicio</a>
+        <a href="estadisticas.php">Estadísticas</a>
+        <a href="informes.php">Informes</a>
+        <a href="inventario.php">Inventario</a>
+        <a href="configuracion.php">Configuración</a>
+        <a href="../InicioSesion/CerrarSesion.php">Cerrar sesión</a>
+        <a href="javascript:history.back()">Volver</a>
     </div>
     <div class="main">
         <h1>Generación de Informes</h1>
@@ -90,61 +175,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="date" name="fecha_fin" required>
                     <button type="submit">Generar Informe</button>
                 </form>
-                <?php if (isset($mensajeExito)): ?>
-                    <p style="color: green;"><?= $mensajeExito ?></p>
+                <?php if (!empty($mensajeExito)): ?>
+                    <p style="color: green;"><?= htmlspecialchars($mensajeExito) ?></p>
+                <?php endif; ?>
+                <?php if (!empty($mensajeError)): ?>
+                    <p style="color: red;"><?= htmlspecialchars($mensajeError) ?></p>
                 <?php endif; ?>
             </div>
             
             <div class="card">
                 <h2>Informes Recientes</h2>
-                <?php foreach ($informesRecientes as $informe): ?>
-                    <div class="informe-card">
-                        <div class="informe-icon">
-                            <?php
-                            switch($informe['tipo']) {
-                                case 'ventas':
-                                    echo '📊';
-                                    break;
-                                case 'inventario':
-                                    echo '📦';
-                                    break;
-                                case 'clientes':
-                                    echo '👥';
-                                    break;
-                                default:
-                                    echo '📄';
-                            }
-                            ?>
+                <?php if (empty($informesRecientes)): ?>
+                    <p>No hay informes recientes disponibles.</p>
+                <?php else: ?>
+                    <?php foreach ($informesRecientes as $informe): ?>
+                        <div class="informe-card">
+                            <div class="informe-icon">
+                                <?php
+                                $tipo = isset($informe['tipo']) ? $informe['tipo'] : 'desconocido';
+                                switch($tipo) {
+                                    case 'ventas_diarias':
+                                        echo '📊';
+                                        break;
+                                    case 'inventario':
+                                        echo '📦';
+                                        break;
+                                    case 'clientes':
+                                        echo '👥';
+                                        break;
+                                    case 'productos':
+                                        echo '🛍️';
+                                        break;
+                                    default:
+                                        echo '📄';
+                                }
+                                ?>
+                            </div>
+                            <div class="informe-info">
+                                <h3><?= isset($informe['nombre']) ? htmlspecialchars($informe['nombre']) : 'Informe sin nombre' ?></h3>
+                                <p>Generado el: <?= isset($informe['fecha']) ? htmlspecialchars($informe['fecha']) : (isset($informe['fecha_creacion']) ? htmlspecialchars($informe['fecha_creacion']) : 'Fecha desconocida') ?></p>
+                            </div>
+                            <div class="informe-actions">
+                                <?php if (isset($informe['id'])): ?>
+                                    <a href="descargar_informe.php?id=<?= $informe['id'] ?>" class="btn">Descargar</a>
+                                    <a href="ver_informe.php?id=<?= $informe['id'] ?>" class="btn">Ver</a>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        <div class="informe-info">
-                            <h3><?= htmlspecialchars($informe['nombre']) ?></h3>
-                            <p>Generado el: <?= htmlspecialchars($informe['fecha']) ?></p>
-                        </div>
-                        <div class="informe-actions">
-                            <a href="#" class="btn">Descargar</a>
-                            <a href="#" class="btn">Ver</a>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
-        </div>
-
-        <div class="card">
-            <h2>Programar Informes Automáticos</h2>
-            <form action="" method="POST">
-                <select name="informe_automatico" required>
-                    <option value="ventas_semanales">Ventas Semanales</option>
-                    <option value="inventario_mensual">Inventario Mensual</option>
-                    <option value="clientes_trimestral">Actividad de Clientes Trimestral</option>
-                </select>
-                <select name="frecuencia" required>
-                    <option value="semanal">Semanal</option>
-                    <option value="mensual">Mensual</option>
-                    <option value="trimestral">Trimestral</option>
-                </select>
-                <input type="email" name="email" placeholder="Email para recibir el informe" required>
-                <button type="submit">Programar Informe</button>
-            </form>
         </div>
     </div>
 </body>
