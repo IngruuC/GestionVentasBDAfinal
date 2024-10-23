@@ -148,8 +148,8 @@ form .signup-link a:hover{
     border-radius: 25px;
     background: #fff;
     transition: all 0.3s ease;
-    appearance: none; /* Quitar el estilo por defecto del navegador */
-    cursor: pointer; /* Cambiar el cursor para indicar que es interactivo */
+    appearance: none; 
+    cursor: pointer; 
 }
 
 .wrapper form .field select:focus {

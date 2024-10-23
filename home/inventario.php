@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
         }
 
-        // Actualizar los datos después de realizar una acción
+        // Actualizar los datos 
         $productos = getProductosInventario($pdo);
         $productosBajoStock = getProductosBajoStock($pdo);
     }

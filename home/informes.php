@@ -11,11 +11,10 @@ $connection = new Connection();
 $pdo = $connection->connect();
 
 function getInformesRecientes($pdo) {
-    // Primero, obtenemos la información sobre las columnas de la tabla
+    // Tablas
     $stmt = $pdo->query("DESCRIBE informes");
     $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-    // Construimos la consulta basándonos en las columnas existentes
     $selectColumns = [];
     if (in_array('id', $columns)) $selectColumns[] = 'id';
     if (in_array('nombre', $columns)) $selectColumns[] = 'nombre';
@@ -23,7 +22,6 @@ function getInformesRecientes($pdo) {
     if (in_array('fecha_creacion', $columns)) $selectColumns[] = 'fecha_creacion';  // Alternativa común para 'fecha'
     if (in_array('tipo', $columns)) $selectColumns[] = 'tipo';
 
-    // Si no hay columnas válidas, lanzamos una excepción
     if (empty($selectColumns)) {
         throw new Exception("No se encontraron columnas válidas en la tabla informes");
     }
@@ -109,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $nombreInforme = generarInforme($pdo, $tipoInforme, $fechaInicio, $fechaFin);
         $mensajeExito = "Informe '$nombreInforme' generado exitosamente.";
-        $informesRecientes = getInformesRecientes($pdo); // Actualizamos la lista de informes recientes
+        $informesRecientes = getInformesRecientes($pdo); // Lista de informes clientes Act.
     } catch (Exception $e) {
         $mensajeError = "Error al generar el informe: " . $e->getMessage();
     }

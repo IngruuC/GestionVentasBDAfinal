@@ -223,19 +223,16 @@ $selectedOption = isset($_GET['option']) ? $_GET['option'] : 'inicio';
             <div class="card">
                 <h2>Estadísticas</h2>
                 <p>Aquí puedes mostrar gráficos y estadísticas detalladas.</p>
-                <!-- Agrega aquí más estadísticas o gráficos según sea necesario -->
             </div>
         <?php elseif ($selectedOption === 'informes'): ?>
             <div class="card">
                 <h2>Informes</h2>
                 <p>Sección para generar y ver informes.</p>
-                <!-- Agrega aquí opciones para generar diferentes tipos de informes -->
             </div>
         <?php elseif ($selectedOption === 'configuracion'): ?>
             <div class="card">
                 <h2>Configuración</h2>
                 <p>Opciones de configuración del sistema.</p>
-                <!-- Agrega aquí opciones de configuración del sistema -->
             </div>
         <?php endif; ?>
     </div>

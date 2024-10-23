@@ -2,7 +2,7 @@
 session_start();
 
 // Verifica si el usuario está autenticado
-if (!isset($_SESSION['username']) || $_SESSION['role_id'] != 3) { // Suponiendo que el rol de secretaria es 2
+if (!isset($_SESSION['username']) || $_SESSION['role_id'] != 3) { 
     header("Location: ../index.php");
     exit();
 }

@@ -59,7 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
         }
         
-        // Actualizar la lista de usuarios después de realizar una acción
         $usuarios = getUsuarios($pdo);
     }
 }

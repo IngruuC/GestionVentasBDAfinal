@@ -9,8 +9,8 @@ $connection = new Connection();
 $pdo = $connection->connect();
 
 function generarInforme($pdo, $tipo, $fechaInicio, $fechaFin) {
-    // Copia aquí la función generarInforme de tu archivo informes.php
-    // Asegúrate de ajustar las rutas si es necesario
+      //Sacar
+
 }
 
 $sql = "SELECT * FROM informes_programados WHERE proxima_ejecucion <= NOW()";
@@ -34,15 +34,15 @@ foreach ($informesProgramados as $informe) {
 
     $nombreArchivo = generarInforme($pdo, $informe['tipo'], $fechaInicio->format('Y-m-d'), $fechaFin->format('Y-m-d'));
 
-    // Enviar el informe por correo
+    // Enviar el informe por correo   // SACAR********
     $mail = new PHPMailer(true);
     try {
         // Configurar el servidor de correo
         $mail->isSMTP();
-        $mail->Host       = 'smtp.example.com'; // Reemplaza con tu servidor SMTP
+        $mail->Host       = 'smtp.example.com'; 
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'tu_email@example.com'; // Reemplaza con tu email
-        $mail->Password   = 'tu_contraseña'; // Reemplaza con tu contraseña
+        $mail->Username   = 'tu_email@example.com'; 
+        $mail->Password   = 'tu_contraseña';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
@@ -57,7 +57,7 @@ foreach ($informesProgramados as $informe) {
         $mail->send();
         echo "Informe enviado a " . $informe['email'] . "<br>";
 
-        // Actualizar la próxima ejecución
+        // Actualizar la próxima ejecución    //SACAR*******
         $proximaEjecucion = new DateTime();
         switch ($informe['frecuencia']) {
             case 'diario':

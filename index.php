@@ -20,7 +20,7 @@
                 text: '" . $_SESSION['error_message'] . "'
             });
         </script>";
-        unset($_SESSION['error_message']);  // Limpiar el mensaje de error después de mostrarlo
+        unset($_SESSION['error_message']);  // Limpiar el mensaje de error//
     }
     ?>
     <div class="wrapper">

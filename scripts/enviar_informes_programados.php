@@ -9,8 +9,7 @@ $connection = new Connection();
 $pdo = $connection->connect();
 
 function generarInforme($pdo, $tipo, $fechaInicio, $fechaFin) {
-    // Copia aquí la función generarInforme de tu archivo informes.php
-    // Asegúrate de ajustar las rutas si es necesario
+   
 }
 
 $sql = "SELECT * FROM informes_programados WHERE proxima_ejecucion <= NOW()";
@@ -39,10 +38,10 @@ foreach ($informesProgramados as $informe) {
     try {
         // Configurar el servidor de correo
         $mail->isSMTP();
-        $mail->Host       = 'smtp.example.com'; // Reemplaza con tu servidor SMTP
+        $mail->Host       = 'smtp.example.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'tu_email@example.com'; // Reemplaza con tu email
-        $mail->Password   = 'tu_contraseña'; // Reemplaza con tu contraseña
+        $mail->Username   = 'tu_email@example.com'; 
+        $mail->Password   = 'tu_contraseña';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
