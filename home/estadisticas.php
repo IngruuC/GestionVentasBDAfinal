@@ -103,14 +103,13 @@ $totalVentas = array_sum(array_column($ventasPorPeriodo, 'total'));
 </head>
 <body>
     <div class="sidebar">
-    <h2>Dashboard</h2>
-    <a href="dashboard.php">Inicio</a>
-    <a href="estadisticas.php">Estadísticas</a>
-    <a href="informes.php">Informes</a>
-    <a href="inventario.php">Inventario</a>
-    <a href="configuracion.php">Configuración</a>
-    <a href="../InicioSesion/CerrarSesion.php">Cerrar sesión</a>
-    <a href="javascript:history.back()">Volver</a>
+        <h2>Dashboard</h2>
+        <a href="dashboard.php">Inicio</a>
+        <a href="estadisticas.php">Estadísticas</a>
+        <a href="inventario.php">Inventario</a>
+        <a href="configuracion.php">Configuración</a>
+        <a href="../InicioSesion/CerrarSesion.php">Cerrar sesión</a>
+        <a href="javascript:history.back()">Volver</a>
     </div>
     <div class="main">
         <h1>Estadísticas del Supermercado</h1>
@@ -157,15 +156,7 @@ $totalVentas = array_sum(array_column($ventasPorPeriodo, 'total'));
             <canvas id="comparacionSucursalesChart"></canvas>
         </div>
 
-        <div class="card">
-            <h2>Consejos para Aumentar las Ventas</h2>
-            <ul>
-                <li>Implementa promociones cruzadas con los productos más vendidos.</li>
-                <li>Optimiza la disposición de los productos en las sucursales con menor rendimiento.</li>
-                <li>Considera ampliar el inventario de los productos top en todas las sucursales.</li>
-                <li>Analiza los patrones de venta para ajustar los horarios de personal.</li>
-            </ul>
-        </div>
+        
     </div>
 
     <script>

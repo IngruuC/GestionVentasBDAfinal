@@ -109,7 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h2>Dashboard</h2>
         <a href="dashboard.php">Inicio</a>
         <a href="estadisticas.php">Estadísticas</a>
-        <a href="informes.php">Informes</a>
         <a href="inventario.php">Inventario</a>
         <a href="configuracion.php">Configuración</a>
         <a href="../InicioSesion/CerrarSesion.php">Cerrar sesión</a>

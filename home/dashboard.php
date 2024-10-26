@@ -75,7 +75,6 @@ $nivel = isset($_GET['nivel']) ? $_GET['nivel'] : 'empresas';
 $empresa_id = isset($_GET['empresa_id']) ? $_GET['empresa_id'] : null;
 $sucursal_id = isset($_GET['sucursal_id']) ? $_GET['sucursal_id'] : null;
 
-// Determinar qué contenido mostrar basado en la opción seleccionada
 $selectedOption = isset($_GET['option']) ? $_GET['option'] : 'inicio';
 
 ?>
@@ -97,13 +96,12 @@ $selectedOption = isset($_GET['option']) ? $_GET['option'] : 'inicio';
 </head>
 <body>
     <div class="sidebar">
-    <h2>Dashboard</h2>
-    <a href="dashboard.php">Inicio</a>
-    <a href="estadisticas.php">Estadísticas</a>
-    <a href="informes.php">Informes</a>
-    <a href="configuracion.php">Configuración</a>
-    <a href="inventario.php">Gestión de Inventario</a>
-    <a href="../InicioSesion/CerrarSesion.php">Cerrar sesión</a>
+        <h2>Dashboard</h2>
+        <a href="dashboard.php">Inicio</a>
+        <a href="estadisticas.php">Estadísticas</a>
+        <a href="configuracion.php">Configuración</a>
+        <a href="inventario.php">Gestión de Inventario</a>
+        <a href="../InicioSesion/CerrarSesion.php">Cerrar sesión</a>
     </div>
     <div class="main">
         <h1>Dashboard - <?php echo htmlspecialchars($role_name); ?></h1>
@@ -211,23 +209,10 @@ $selectedOption = isset($_GET['option']) ? $_GET['option'] : 'inicio';
                 <canvas id="ventasChart" width="400" height="200"></canvas>
             </div>
 
-            <?php if ($_SESSION['role_id'] == 1): ?>
-    <div class="card">
-        <h2>Ejecutar Informes Programados</h2>
-        <p>Haz clic en el botón para ejecutar manualmente los informes programados.</p>
-        <a href="ejecutar_informes.php" class="btn">Ejecutar Informes</a>
-    </div>
-<?php endif; ?>
-
         <?php elseif ($selectedOption === 'estadisticas'): ?>
             <div class="card">
                 <h2>Estadísticas</h2>
                 <p>Aquí puedes mostrar gráficos y estadísticas detalladas.</p>
-            </div>
-        <?php elseif ($selectedOption === 'informes'): ?>
-            <div class="card">
-                <h2>Informes</h2>
-                <p>Sección para generar y ver informes.</p>
             </div>
         <?php elseif ($selectedOption === 'configuracion'): ?>
             <div class="card">
