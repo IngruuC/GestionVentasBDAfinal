@@ -12,6 +12,18 @@
 <body>
     <?php
     session_start();
+    // Para mensajes de éxito
+    if (isset($_SESSION['success_message'])) {
+        echo "<script>
+            Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: '" . $_SESSION['success_message'] . "'
+            });
+        </script>";
+        unset($_SESSION['success_message']);
+    }
+    // Para mensajes de error
     if (isset($_SESSION['error_message'])) {
         echo "<script>
             Swal.fire({
@@ -20,7 +32,7 @@
                 text: '" . $_SESSION['error_message'] . "'
             });
         </script>";
-        unset($_SESSION['error_message']);  // Limpiar el mensaje de error//
+        unset($_SESSION['error_message']);
     }
     ?>
     <div class="wrapper">

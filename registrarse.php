@@ -25,8 +25,8 @@
             <div class="field">
                 <select id="role_id" name="role_id" required>
                     <option value="1">Admin</option>
-                    <option value="2">Usuario</option>
-                    <option value="3">Proveedor</option>
+                    <option value="2">Proveedor</option>
+                    <option value="3">Usuario</option>
                     <!-- Ajusta los valores según los roles disponibles en tu base de datos -->
                 </select>
                 <label for="role_id">Rol</label>

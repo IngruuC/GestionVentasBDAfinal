@@ -50,12 +50,58 @@ function getProductoMasVendido($pdo) {
     return $pdo->query($sql)->fetch(PDO::FETCH_ASSOC);
 }
 
+// Nueva función para tendencias de ventas
+function getTendenciaVentas($pdo) {
+    $sql = "SELECT 
+            DATE_FORMAT(fecha_venta, '%Y-%m') as mes,
+            SUM(v.cantidad * p.precio) as total
+            FROM ventas v
+            JOIN productos p ON v.producto_id = p.id
+            GROUP BY DATE_FORMAT(fecha_venta, '%Y-%m')
+            ORDER BY mes DESC
+            LIMIT 2";
+    $result = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    
+    if (count($result) < 2) {
+        return ['tendencia' => 'estable', 'porcentaje' => 0];
+    }
+    
+    $mesActual = $result[0]['total'];
+    $mesAnterior = $result[1]['total'];
+    
+    $diferencia = $mesActual - $mesAnterior;
+    $porcentaje = ($diferencia / $mesAnterior) * 100;
+    
+    if ($porcentaje > 0) {
+        return ['tendencia' => 'subida', 'porcentaje' => abs($porcentaje)];
+    } elseif ($porcentaje < 0) {
+        return ['tendencia' => 'bajada', 'porcentaje' => abs($porcentaje)];
+    } else {
+        return ['tendencia' => 'estable', 'porcentaje' => 0];
+    }
+}
+
+// Nueva función para ranking de sucursales
+function getRankingSucursales($pdo) {
+    $sql = "SELECT 
+            s.nombre,
+            SUM(v.cantidad * p.precio) as total_ventas
+            FROM sucursales s
+            JOIN ventas v ON s.id = v.sucursal_id
+            JOIN productos p ON v.producto_id = p.id
+            GROUP BY s.id, s.nombre
+            ORDER BY total_ventas DESC
+            LIMIT 3";
+    return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+}
+
 $ventasPorPeriodo = getVentasPorPeriodo($pdo);
 $topProductos = getTopProductos($pdo);
 $comparacionSucursales = getComparacionSucursales($pdo);
 $productoMasVendido = getProductoMasVendido($pdo);
-
 $totalVentas = array_sum(array_column($ventasPorPeriodo, 'total'));
+$tendencia = getTendenciaVentas($pdo);
+$rankingSucursales = getRankingSucursales($pdo);
 ?>
 
 <!DOCTYPE html>
@@ -99,6 +145,63 @@ $totalVentas = array_sum(array_column($ventasPorPeriodo, 'total'));
             max-width: 200px;
             margin-bottom: 15px;
         }
+        .tendencia-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .tendencia-valor {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .tendencia-subida {
+            color: #2ecc71;
+        }
+        .tendencia-bajada {
+            color: #e74c3c;
+        }
+        .tendencia-estable {
+            color: #f1c40f;
+        }
+        .ranking-podio {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        .medalla {
+            font-size: 24px;
+            margin-right: 15px;
+            min-width: 40px;
+            text-align: center;
+        }
+        .sucursal-info {
+            flex-grow: 1;
+        }
+        .sucursal-nombre {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .sucursal-ventas {
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -113,6 +216,43 @@ $totalVentas = array_sum(array_column($ventasPorPeriodo, 'total'));
     </div>
     <div class="main">
         <h1>Estadísticas del Supermercado</h1>
+        
+        <!-- Nueva card de tendencia -->
+        <div class="tendencia-card">
+            <h2>Tendencia de Ventas</h2>
+            <div class="tendencia-valor <?php echo 'tendencia-' . $tendencia['tendencia']; ?>">
+                <?php
+                switch($tendencia['tendencia']) {
+                    case 'subida':
+                        echo '↑ +' . number_format($tendencia['porcentaje'], 1) . '%';
+                        break;
+                    case 'bajada':
+                        echo '↓ -' . number_format($tendencia['porcentaje'], 1) . '%';
+                        break;
+                    default:
+                        echo '→ 0%';
+                }
+                ?>
+            </div>
+        </div>
+
+        <!-- Nuevo ranking de sucursales -->
+        <div class="ranking-podio">
+            <h2>Ranking de Sucursales</h2>
+            <?php 
+            $medallas = ['🥇', '🥈', '🥉'];
+            foreach ($rankingSucursales as $index => $sucursal): ?>
+                <div class="ranking-item">
+                    <div class="medalla"><?php echo $medallas[$index]; ?></div>
+                    <div class="sucursal-info">
+                        <div class="sucursal-nombre"><?php echo htmlspecialchars($sucursal['nombre']); ?></div>
+                        <div class="sucursal-ventas">
+                            Ventas: $<?php echo number_format($sucursal['total_ventas'], 2); ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
         
         <div class="grid-container">
             <div class="stat-card">
@@ -144,19 +284,17 @@ $totalVentas = array_sum(array_column($ventasPorPeriodo, 'total'));
             </div>
             
             <div class="product-spotlight">
-                <h2>Producto Más Vendido</h2>
-                <img src="../img/product-best-seller.png" alt="Producto más vendido">
-                <h3><?= htmlspecialchars($productoMasVendido['nombre']) ?></h3>
-                <p>Unidades vendidas: <?= $productoMasVendido['total_vendido'] ?></p>
-            </div>
+    <h2>Producto Más Vendido</h2>
+    <div style="font-size: 64px; margin: 20px 0;">📦</div>
+    <h3><?= htmlspecialchars($productoMasVendido['nombre']) ?></h3>
+    <p>Unidades vendidas: <?= $productoMasVendido['total_vendido'] ?></p>
+</div>
         </div>
         
         <div class="card">
             <h2>Comparación de Sucursales</h2>
             <canvas id="comparacionSucursalesChart"></canvas>
         </div>
-
-        
     </div>
 
     <script>

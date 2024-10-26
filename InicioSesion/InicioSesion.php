@@ -26,15 +26,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['username'] = $user['username'];
             $_SESSION['role_id'] = $user['role_id'];
 
-            if ($user['role_id'] == 1) {
-                header('Location: ../Home/dashboard.php');
-                exit();
-            } else if ($user['role_id'] == 3) {
-                header('Location: ../Home/dashboardUser.php');
-                exit();
-            } else {
-                $_SESSION['error_message'] = "Acceso Denegado";
+            // Redirigir según el rol
+            switch ($user['role_id']) {
+                case 1: // Administrador
+                    header('Location: ../Home/dashboard.php');
+                    break;
+                case 2: // Proveedor
+                    header('Location: ../Home/dashboardProveedor.php');
+                    break;
+                case 3: // Usuario/Cliente
+                    header('Location: ../Home/dashboardUser.php');
+                    break;
+                default:
+                    $_SESSION['error_message'] = "Rol no reconocido";
+                    header('Location: ../index.php');
+                    break;
             }
+            exit();
         }
     } catch (\Throwable $th) {
         $_SESSION['error_message'] = "Error en la conexión: " . $th->getMessage();
